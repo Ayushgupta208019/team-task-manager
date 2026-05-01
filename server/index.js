@@ -319,6 +319,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong.' });
 });
 
-app.listen(port, () => {
-  console.log(`API listening on http://127.0.0.1:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`API listening on 0.0.0.0:${port}`);
 });
