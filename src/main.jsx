@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import './styles.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:4200/api';
+const API = import.meta.env.VITE_API_URL || '/api';
 const statuses = ['To Do', 'In Progress', 'Done'];
 const priorities = ['Low', 'Medium', 'High', 'Critical'];
 
