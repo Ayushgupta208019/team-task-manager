@@ -148,7 +148,7 @@ function ProjectModal({ api, onClose, onDone }) {
   );
 }
 
-function TaskModal({ api, project, members, task, onClose, onDone }) {
+function TaskModal({ api, project, members = [], task, onClose, onDone }) {
   const [form, setForm] = useState(task || {
     title: '',
     description: '',
@@ -205,13 +205,15 @@ function AppShell() {
   const [modal, setModal] = useState(null);
   const [toast, setToast] = useState('');
 
-  const activeProject = projects.find((project) => project.id === activeId);
+  const projectList = Array.isArray(projects) ? projects : [];
+  const activeProject = projectList.find((project) => project.id === activeId);
   const isAdmin = details?.role === 'Admin';
 
   const refresh = async () => {
     const [dashData, projectData] = await Promise.all([api.request('/dashboard'), api.request('/projects')]);
-    setDashboard(dashData);
-    setProjects(projectData.projects);
+    const nextProjects = Array.isArray(projectData.projects) ? projectData.projects : [];
+    setProjects(nextProjects);
+    if (!activeId && nextProjects[0]) setActiveId(nextProjects[0].id);
     if (!activeId && projectData.projects[0]) setActiveId(projectData.projects[0].id);
   };
 
@@ -285,7 +287,7 @@ function AppShell() {
         <div className="brand-mark"><ClipboardList size={26} /> TaskFlow</div>
         <button className="create-btn" onClick={() => setModal('project')}><Plus size={18} /> New project</button>
         <nav className="project-list">
-          {projects.map((project) => (
+          {projectList.map((project) => (
             <button className={project.id === activeId ? 'active' : ''} key={project.id} onClick={() => setActiveId(project.id)}>
               <span>{project.name}</span>
               <small>{project.memberCount} members</small>
@@ -399,7 +401,7 @@ function AppShell() {
 
       {toast && <button className="toast" onClick={() => setToast('')}>{toast}</button>}
       {modal === 'project' && <ProjectModal api={api} onClose={() => setModal(null)} onDone={refresh} />}
-      {(modal === 'task' || modal?.type === 'task') && (
+       {activeProject && (modal === 'task' || modal?.type === 'task') && (
         <TaskModal
           api={api}
           project={activeProject}
