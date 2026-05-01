@@ -2,10 +2,15 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db, migrate } from './db.js';
 import { requireAuth, requireProjectAdmin, requireProjectMember, signToken, getMembership } from './auth.js';
 
 migrate();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.join(__dirname, '..', 'dist');
 
 const app = express();
 const port = process.env.PORT || 4200;
@@ -302,6 +307,11 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   `).all({ userId: req.user.id });
 
   res.json({ totals, perUser, overdueTasks });
+});
+app.use(express.static(clientDist));
+
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 app.use((err, req, res, next) => {
