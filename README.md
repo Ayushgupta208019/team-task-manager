@@ -6,7 +6,7 @@ The project is built as a simplified professional dashboard inspired by tools li
 
 ## Live Demo
 
-Render deployment:
+ Deployment:
 
 ```text
 https://team-task-manager-hg5w.onrender.com/
