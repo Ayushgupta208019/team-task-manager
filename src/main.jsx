@@ -269,7 +269,8 @@ function AppShell() {
 
   const addMember = async (event) => {
     event.preventDefault();
-    const email = new FormData(event.currentTarget).get('email');
+    const form = event.currentTarget;
+    const email = new FormData(form).get('email');
     if (!email) {
       setToast('Choose a user to add.');
       return;
@@ -277,7 +278,7 @@ function AppShell() {
 
     try {
       await api.request(`/projects/${activeId}/members`, { method: 'POST', body: JSON.stringify({ email }) });
-      event.currentTarget.reset();
+      form.reset();
       await Promise.all([loadProject(activeId), refresh()]);
     } catch (err) {
       setToast(err.message);
