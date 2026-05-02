@@ -201,6 +201,7 @@ function AppShell() {
   const [activeId, setActiveId] = useState(null);
   const [details, setDetails] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
   const [modal, setModal] = useState(null);
   const [toast, setToast] = useState('');
@@ -208,9 +209,17 @@ function AppShell() {
   const projectList = Array.isArray(projects) ? projects : [];
   const activeProject = projectList.find((project) => project.id === activeId);
   const isAdmin = details?.role === 'Admin';
+  const memberIds = new Set((details?.members || []).map((member) => member.id));
+  const availableUsers = users.filter((user) => !memberIds.has(user.id));
 
   const refresh = async () => {
-    const [dashData, projectData] = await Promise.all([api.request('/dashboard'), api.request('/projects')]);
+    const [dashData, projectData, userData] = await Promise.all([
+      api.request('/dashboard'),
+      api.request('/projects'),
+      api.request('/users')
+    ]);
+    setDashboard(dashData);
+    setUsers(Array.isArray(userData.users) ? userData.users : []);
     const nextProjects = Array.isArray(projectData.projects) ? projectData.projects : [];
     setProjects(nextProjects);
     if (!activeId && nextProjects[0]) setActiveId(nextProjects[0].id);
@@ -261,10 +270,15 @@ function AppShell() {
   const addMember = async (event) => {
     event.preventDefault();
     const email = new FormData(event.currentTarget).get('email');
+    if (!email) {
+      setToast('Choose a user to add.');
+      return;
+    }
+
     try {
       await api.request(`/projects/${activeId}/members`, { method: 'POST', body: JSON.stringify({ email }) });
       event.currentTarget.reset();
-      await loadProject(activeId);
+      await Promise.all([loadProject(activeId), refresh()]);
     } catch (err) {
       setToast(err.message);
     }
@@ -360,8 +374,13 @@ function AppShell() {
               <div className="panel-heading slim"><h2>Team</h2><Users size={20} /></div>
               {isAdmin && (
                 <form className="member-form" onSubmit={addMember}>
-                  <input name="email" placeholder="user@email.com" />
-                  <button aria-label="Add member"><UserPlus size={18} /></button>
+                  <select name="email" defaultValue="" disabled={!availableUsers.length}>
+                    <option value="">{availableUsers.length ? 'Choose user to add' : 'All users already added'}</option>
+                    {availableUsers.map((user) => (
+                      <option key={user.id} value={user.email}>{user.name} - {user.email}</option>
+                    ))}
+                  </select>
+                  <button aria-label="Add member" disabled={!availableUsers.length}><UserPlus size={18} /></button>
                 </form>
               )}
               <div className="member-list">
